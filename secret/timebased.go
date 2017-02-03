@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"strconv"
 	"bytes"
-
 	"encoding/base64"
 	"crypto/rand"
 	"crypto/rsa"
@@ -61,16 +60,16 @@ func (secret *TimeBasedToken) decrypt(text string) (plaintext []byte) {
 	return data
 }
 
-func (secret *TimeBasedToken) Verify(text string, salt string) (bool) {
+func (secret *TimeBasedToken) Verify(text string, password string) (bool) {
 	current := time.Now().Unix() / 60 / 5
-	res1 := md5.Sum([]byte(strconv.FormatInt(current, 10) + salt))
-	res2 := md5.Sum([]byte(strconv.FormatInt(current-1, 10) + salt))
-	res3 := md5.Sum([]byte(strconv.FormatInt(current+1, 10) + salt))
+	res1 := md5.Sum([]byte(strconv.FormatInt(current, 10) + password))
+	res2 := md5.Sum([]byte(strconv.FormatInt(current-1, 10) + password))
+	res3 := md5.Sum([]byte(strconv.FormatInt(current+1, 10) + password))
 	plain := secret.decrypt(text)
 	return bytes.Equal(res1[:], plain) || bytes.Equal(res2[:], plain) || bytes.Equal(res3[:], plain)
 }
-func (secret *TimeBasedToken) GenerateToken(salt string) (string, error) {
-	plainMsg := md5.Sum([]byte(strconv.FormatInt(time.Now().Unix()/60/5, 10) + salt))
+func (secret *TimeBasedToken) GenerateToken(password string) (string, error) {
+	plainMsg := md5.Sum([]byte(strconv.FormatInt(time.Now().Unix()/60/5, 10) + password))
 	cipherText, err := secret.encrypt(plainMsg[:])
 	if err != nil {
 		return "", err
